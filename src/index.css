@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* Light theme with dark-red (BMF brand) accents. */
+html,
+body,
+#root {
+  min-height: 100vh;
+  margin: 0;
+  background: #ffffff;
+  color: #18181b; /* zinc-900 */
+}
+
+body {
+  font-family: 'Helvetica Neue', 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
