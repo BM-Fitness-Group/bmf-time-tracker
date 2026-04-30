@@ -70,7 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }, 6000)
 
-    const init = async () => {
+    // Re-fetch session + employee. Used both at startup and whenever the
+    // auth state may have changed externally (sister tab/window completed
+    // a magic-link sign-in, OS restored the PWA from background, etc.).
+    const refresh = async () => {
       try {
         const { data } = await supabase.auth.getSession()
         sessionSettled = true
@@ -80,14 +83,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const emp = await fetchEmployee(data.session.user.id)
           if (!active) return
           setEmployee(emp)
+        } else {
+          setEmployee(null)
         }
       } catch (err) {
-        console.error('AuthContext init failed', err)
+        console.error('AuthContext refresh failed', err)
       } finally {
         if (active) setLoading(false)
       }
     }
-    void init()
+
+    void refresh()
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, next) => {
       setSession(next)
@@ -99,10 +105,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
+    // Pick up cross-window sign-ins. When a magic link is clicked, the OS
+    // typically opens it in the user's default browser — not the PWA window
+    // they were sitting on. Supabase's auth client stores the new session in
+    // localStorage; the storage event fires in other windows of the same
+    // origin. We also re-check on tab focus, since some PWA hosts don't
+    // reliably propagate storage events across the browser/PWA boundary.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'bmf-time-tracker-auth') void refresh()
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void refresh()
+    }
+    window.addEventListener('storage', onStorage)
+    document.addEventListener('visibilitychange', onVisibility)
+
     return () => {
       active = false
       clearTimeout(watchdog)
       sub.subscription.unsubscribe()
+      window.removeEventListener('storage', onStorage)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [])
 
