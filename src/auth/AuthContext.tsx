@@ -21,7 +21,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [employee, setEmployee] = useState<Employee | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchEmployee = async (authUserId: string): Promise<Employee | null> => {
+  type FetchResult =
+    | { kind: 'ok'; employee: Employee | null }
+    | { kind: 'error'; error: string }
+
+  const fetchEmployeeOnce = async (authUserId: string): Promise<FetchResult> => {
     const { data, error } = await supabase
       .from('employees')
       .select('*')
@@ -29,10 +33,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('is_active', true)
       .maybeSingle()
     if (error) {
-      console.error('fetchEmployee error', error)
-      return null
+      console.warn('fetchEmployee error', error)
+      return { kind: 'error', error: error.message }
     }
-    return data ?? null
+    return { kind: 'ok', employee: data ?? null }
+  }
+
+  // Retry the employees lookup on transient errors (network blip, supabase
+  // briefly unavailable, RLS-context race during cold start). Only fall
+  // through to "null" after we've actually confirmed an empty result —
+  // never on a query failure.
+  const fetchEmployee = async (authUserId: string): Promise<Employee | null> => {
+    const delays = [0, 400, 1200, 3000]
+    let lastError: string | null = null
+    for (const delay of delays) {
+      if (delay > 0) await new Promise(r => setTimeout(r, delay))
+      const res = await fetchEmployeeOnce(authUserId)
+      if (res.kind === 'ok') return res.employee
+      lastError = res.error
+    }
+    console.error('fetchEmployee gave up after retries:', lastError)
+    return null
   }
 
   useEffect(() => {
