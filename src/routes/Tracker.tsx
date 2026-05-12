@@ -86,13 +86,17 @@ export default function Tracker() {
         />
 
         <div className="mt-5 flex items-center justify-between">
-          <button
-            onClick={() => setManualOpen(true)}
-            className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800 flex items-center gap-2"
-          >
-            <Plus className="w-3 h-3" />
-            MANUAL ENTRY
-          </button>
+          {employee.role === 'admin' ? (
+            <button
+              onClick={() => setManualOpen(true)}
+              className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800 flex items-center gap-2"
+            >
+              <Plus className="w-3 h-3" />
+              MANUAL ENTRY
+            </button>
+          ) : (
+            <span />
+          )}
           <button
             onClick={() => tracker.refresh()}
             className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800 flex items-center gap-2"
@@ -103,7 +107,7 @@ export default function Tracker() {
         </div>
       </div>
 
-      {manualOpen && (
+      {manualOpen && employee.role === 'admin' && (
         <ManualEntryModal
           onClose={() => setManualOpen(false)}
           onSubmit={async input => {
