@@ -21,6 +21,7 @@ export type TimeEntry = {
   id: string
   employee_id: string
   entity: EntityName
+  category: string | null
   clock_in: string
   clock_out: string | null
   break_minutes: number
@@ -36,6 +37,7 @@ export type TimeEntry = {
 export type ActiveSession = {
   employee_id: string
   entity: EntityName
+  category: string | null
   clock_in: string
   break_start: string | null
   break_minutes: number

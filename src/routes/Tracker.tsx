@@ -20,6 +20,7 @@ import {
   fmtHours,
   sumByEntity,
 } from '@/lib/time'
+import { CATEGORIES_BY_ENTITY, categoryNamesFor } from '@/lib/categories'
 import OvertimeBanner from '@/components/OvertimeBanner'
 import LongSessionBanner from '@/components/LongSessionBanner'
 import type { ActiveSession, EntityName, TimeEntry } from '@/types/db'
@@ -67,10 +68,11 @@ export default function Tracker() {
           <ActiveSessionCard
             session={tracker.activeSession}
             onClockOut={tracker.clockOut}
-            onSwitch={tracker.switchEntity}
+            onSwitch={tracker.switchTo}
             onStartBreak={tracker.startBreak}
             onEndBreak={tracker.endBreak}
             onUpdateNotes={tracker.updateNotes}
+            onUpdateCategory={tracker.updateActiveCategory}
           />
         ) : (
           <ClockInCard onClockIn={tracker.clockIn} loading={tracker.loading} />
@@ -80,6 +82,7 @@ export default function Tracker() {
           entries={tracker.todaysEntries}
           onDelete={tracker.deleteEntry}
           onUpdateNotes={tracker.updateEntryNotes}
+          onUpdateCategory={tracker.updateEntryCategory}
         />
 
         <div className="mt-5 flex items-center justify-between">
@@ -189,38 +192,48 @@ function WeekSummary({ entries }: { entries: TimeEntry[] }) {
   )
 }
 
-function ClockInCard({
-  onClockIn,
-  loading,
+function EntityCategoryPicker({
+  entity,
+  category,
+  onChange,
+  excludeSame,
 }: {
-  onClockIn: (entity: EntityName, notes?: string) => Promise<void>
-  loading: boolean
+  entity: EntityName | null
+  category: string | null
+  onChange: (entity: EntityName, category: string) => void
+  // If set, pressing "same as current" combo is allowed but visually muted.
+  // Used by the switch flow.
+  excludeSame?: { entity: EntityName; category: string } | null
 }) {
-  const [entity, setEntity] = useState<EntityName | null>(null)
-  const [notes, setNotes] = useState('')
-  const [busy, setBusy] = useState(false)
+  // Local "selected entity but not yet category" state for the two-step pick.
+  const [pendingEntity, setPendingEntity] = useState<EntityName | null>(entity)
 
-  const go = async () => {
-    if (!entity) return
-    setBusy(true)
-    await onClockIn(entity, notes)
-    setBusy(false)
-    setNotes('')
-    setEntity(null)
-  }
+  // Re-sync when parent forces a new entity (e.g. cleared after clock-in).
+  useEffect(() => {
+    setPendingEntity(entity)
+  }, [entity])
+
+  const categories = pendingEntity ? categoryNamesFor(pendingEntity) : []
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl p-5 mb-5 shadow-sm">
-      <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mb-3">
-        CLOCK IN
+    <>
+      <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mb-2">
+        ENTITY
       </div>
       <div className="grid grid-cols-3 gap-2 mb-4">
         {ENTITIES.map(name => (
           <button
             key={name}
-            onClick={() => setEntity(name)}
+            type="button"
+            onClick={() => {
+              setPendingEntity(name)
+              // If only one category exists, auto-select it. Otherwise wait
+              // for explicit pick.
+              const cats = categoryNamesFor(name)
+              if (cats.length === 1) onChange(name, cats[0])
+            }}
             className={`p-3 rounded-lg border text-left transition ${
-              entity === name
+              pendingEntity === name
                 ? 'border-red-700 bg-red-50 ring-1 ring-red-700/20'
                 : 'border-zinc-200 hover:border-zinc-400 bg-zinc-50'
             }`}
@@ -235,6 +248,85 @@ function ClockInCard({
           </button>
         ))}
       </div>
+
+      {pendingEntity && (
+        <>
+          <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mb-2">
+            PROJECT
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {categories.map(catName => {
+              const isCurrent =
+                excludeSame?.entity === pendingEntity &&
+                excludeSame?.category === catName
+              const isPicked =
+                pendingEntity === entity && catName === category
+              return (
+                <button
+                  key={catName}
+                  type="button"
+                  disabled={isCurrent}
+                  onClick={() => onChange(pendingEntity, catName)}
+                  className={`p-2 rounded-lg border text-xs font-bold tracking-wide transition ${
+                    isPicked
+                      ? 'border-red-700 bg-red-50 ring-1 ring-red-700/20 text-zinc-900'
+                      : isCurrent
+                      ? 'border-zinc-200 bg-zinc-50 text-zinc-400'
+                      : 'border-zinc-200 hover:border-zinc-400 bg-white text-zinc-700'
+                  }`}
+                  title={isCurrent ? 'Currently on this project' : undefined}
+                >
+                  {catName}
+                  {isCurrent && (
+                    <span className="block text-[9px] font-normal tracking-wider text-zinc-400 mt-0.5">
+                      CURRENT
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
+function ClockInCard({
+  onClockIn,
+  loading,
+}: {
+  onClockIn: (entity: EntityName, category: string, notes?: string) => Promise<void>
+  loading: boolean
+}) {
+  const [entity, setEntity] = useState<EntityName | null>(null)
+  const [category, setCategory] = useState<string | null>(null)
+  const [notes, setNotes] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const go = async () => {
+    if (!entity || !category) return
+    setBusy(true)
+    await onClockIn(entity, category, notes)
+    setBusy(false)
+    setNotes('')
+    setEntity(null)
+    setCategory(null)
+  }
+
+  return (
+    <div className="bg-white border border-zinc-200 rounded-xl p-5 mb-5 shadow-sm">
+      <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mb-3">
+        CLOCK IN
+      </div>
+      <EntityCategoryPicker
+        entity={entity}
+        category={category}
+        onChange={(e, c) => {
+          setEntity(e)
+          setCategory(c)
+        }}
+      />
       <textarea
         value={notes}
         onChange={e => setNotes(e.target.value)}
@@ -244,7 +336,7 @@ function ClockInCard({
       />
       <button
         onClick={go}
-        disabled={!entity || busy || loading}
+        disabled={!entity || !category || busy || loading}
         className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-4 rounded-lg transition flex items-center justify-center gap-2 tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
       >
         <Clock className="w-4 h-4" />
@@ -261,19 +353,22 @@ function ActiveSessionCard({
   onStartBreak,
   onEndBreak,
   onUpdateNotes,
+  onUpdateCategory,
 }: {
   session: ActiveSession
   onClockOut: () => Promise<unknown>
-  onSwitch: (entity: EntityName) => Promise<unknown>
+  onSwitch: (entity: EntityName, category: string) => Promise<unknown>
   onStartBreak: () => Promise<unknown>
   onEndBreak: () => Promise<unknown>
   onUpdateNotes: (notes: string) => Promise<unknown>
+  onUpdateCategory: (category: string) => Promise<unknown>
 }) {
   const [now, setNow] = useState(Date.now())
   const [notes, setNotes] = useState(session.notes ?? '')
   const [notesDirty, setNotesDirty] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [showSwitch, setShowSwitch] = useState(false)
+  const [showCategoryFix, setShowCategoryFix] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000)
@@ -307,6 +402,10 @@ function ActiveSessionCard({
     setNotesDirty(false)
   }
 
+  // Existing sessions started before categories existed have null. Prompt
+  // user to set one before they clock out so the entry isn't Uncategorized.
+  const missingCategory = !session.category
+
   return (
     <div className="bg-white border border-zinc-200 rounded-xl p-5 mb-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
@@ -314,12 +413,47 @@ function ActiveSessionCard({
           <span className={`w-2 h-2 rounded-full ${ENTITY_DOT[session.entity]}`} />
           <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500">
             ON THE CLOCK · {session.entity.toUpperCase()}
+            {session.category && ` · ${session.category.toUpperCase()}`}
           </div>
         </div>
         <div className="text-[10px] font-bold tracking-[0.2em] text-zinc-500">
           Since {fmtClock(session.clock_in)}
         </div>
       </div>
+
+      {missingCategory && !showCategoryFix && (
+        <div className="mb-3 border border-amber-300 bg-amber-50 rounded p-2 text-xs text-amber-900 flex items-center justify-between gap-2">
+          <span>This session has no project category set.</span>
+          <button
+            onClick={() => setShowCategoryFix(true)}
+            className="text-[10px] font-bold tracking-widest text-amber-900 hover:underline"
+          >
+            SET →
+          </button>
+        </div>
+      )}
+
+      {showCategoryFix && (
+        <div className="mb-3 border border-zinc-200 rounded p-3">
+          <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mb-2">
+            SET PROJECT
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {CATEGORIES_BY_ENTITY[session.entity].map(c => (
+              <button
+                key={c.name}
+                onClick={async () => {
+                  await onUpdateCategory(c.name)
+                  setShowCategoryFix(false)
+                }}
+                className="p-2 rounded border border-zinc-200 hover:border-zinc-400 bg-white text-xs font-bold"
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="text-center py-4">
         <div className="text-5xl font-black tabular-nums tracking-tighter">
@@ -345,7 +479,7 @@ function ActiveSessionCard({
         }}
         onBlur={saveNotes}
         rows={2}
-        placeholder="Notes"
+        placeholder="Notes / project detail"
         className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 mb-4 text-sm placeholder-zinc-400 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20 resize-none"
       />
 
@@ -371,21 +505,20 @@ function ActiveSessionCard({
       </div>
 
       {showSwitch && (
-        <div className="grid grid-cols-3 gap-2 mb-2">
-          {ENTITIES.filter(e => e !== session.entity).map(name => (
-            <button
-              key={name}
-              disabled={busy !== null}
-              onClick={async () => {
-                setShowSwitch(false)
-                await withBusy('switch', () => onSwitch(name))
-              }}
-              className="p-2 rounded-lg border border-zinc-300 hover:border-zinc-500 hover:bg-zinc-50 text-[10px] font-bold tracking-[0.2em] disabled:opacity-50"
-            >
-              <span className={`inline-block w-2 h-2 rounded-full ${ENTITY_DOT[name]} mr-2`} />
-              {name.toUpperCase()}
-            </button>
-          ))}
+        <div className="mt-2 p-3 border border-zinc-200 rounded-lg">
+          <EntityCategoryPicker
+            entity={session.entity}
+            category={session.category}
+            excludeSame={
+              session.category
+                ? { entity: session.entity, category: session.category }
+                : null
+            }
+            onChange={async (e, c) => {
+              setShowSwitch(false)
+              await withBusy('switch', () => onSwitch(e, c))
+            }}
+          />
         </div>
       )}
 
@@ -405,10 +538,12 @@ function EntriesList({
   entries,
   onDelete,
   onUpdateNotes,
+  onUpdateCategory,
 }: {
   entries: TimeEntry[]
   onDelete: (id: string) => Promise<unknown>
   onUpdateNotes: (id: string, notes: string) => Promise<unknown>
+  onUpdateCategory: (id: string, entity: EntityName, category: string) => Promise<unknown>
 }) {
   if (entries.length === 0) return null
   return (
@@ -423,6 +558,7 @@ function EntriesList({
             entry={e}
             onDelete={onDelete}
             onUpdateNotes={onUpdateNotes}
+            onUpdateCategory={onUpdateCategory}
           />
         ))}
       </ul>
@@ -434,13 +570,16 @@ function EntryRow({
   entry,
   onDelete,
   onUpdateNotes,
+  onUpdateCategory,
 }: {
   entry: TimeEntry
   onDelete: (id: string) => Promise<unknown>
   onUpdateNotes: (id: string, notes: string) => Promise<unknown>
+  onUpdateCategory: (id: string, entity: EntityName, category: string) => Promise<unknown>
 }) {
   const [notes, setNotes] = useState(entry.notes)
   const [dirty, setDirty] = useState(false)
+  const [reclassOpen, setReclassOpen] = useState(false)
 
   useEffect(() => {
     if (!dirty) setNotes(entry.notes)
@@ -451,9 +590,13 @@ function EntryRow({
     <li className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={`w-2 h-2 rounded-full ${ENTITY_DOT[entry.entity]}`} />
             <span className="text-xs font-bold">{entry.entity}</span>
+            <span className="text-xs text-zinc-500">·</span>
+            <span className="text-xs text-zinc-700">
+              {entry.category ?? 'Uncategorized'}
+            </span>
             {entry.is_manual && (
               <span className="text-[9px] font-bold tracking-widest text-zinc-500">
                 MANUAL
@@ -501,6 +644,28 @@ function EntryRow({
         placeholder="Add notes"
         className="w-full mt-2 bg-white border border-zinc-200 rounded px-2 py-1 text-xs placeholder-zinc-400 focus:outline-none focus:border-zinc-400 disabled:opacity-60 disabled:bg-zinc-50"
       />
+      {!entry.is_approved && (
+        <div className="mt-1">
+          <button
+            onClick={() => setReclassOpen(o => !o)}
+            className="text-[10px] font-bold tracking-widest text-zinc-500 hover:text-red-800"
+          >
+            {reclassOpen ? 'CLOSE' : 'RECLASSIFY ENTITY / PROJECT'}
+          </button>
+          {reclassOpen && (
+            <div className="mt-2 p-3 border border-zinc-200 rounded">
+              <EntityCategoryPicker
+                entity={entry.entity}
+                category={entry.category}
+                onChange={async (e, c) => {
+                  await onUpdateCategory(entry.id, e, c)
+                  setReclassOpen(false)
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </li>
   )
 }
@@ -512,6 +677,7 @@ function ManualEntryModal({
   onClose: () => void
   onSubmit: (input: {
     entity: EntityName
+    category: string
     clock_in: string
     clock_out: string
     break_minutes: number
@@ -521,12 +687,21 @@ function ManualEntryModal({
   const today = new Date().toISOString().slice(0, 10)
   const [date, setDate] = useState(today)
   const [entity, setEntity] = useState<EntityName>('Corporate')
+  const [category, setCategory] = useState<string>(
+    categoryNamesFor('Corporate')[0],
+  )
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('17:00')
   const [breakMinutes, setBreakMinutes] = useState(0)
   const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+
+  // When entity changes, reset category to that entity's first option so the
+  // form is never in an inconsistent (entity, category) state.
+  useEffect(() => {
+    setCategory(categoryNamesFor(entity)[0])
+  }, [entity])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -544,6 +719,7 @@ function ManualEntryModal({
     setBusy(true)
     await onSubmit({
       entity,
+      category,
       clock_in: ci.toISOString(),
       clock_out: co.toISOString(),
       break_minutes: Math.max(0, breakMinutes),
@@ -560,7 +736,7 @@ function ManualEntryModal({
       <form
         onSubmit={submit}
         onClick={e => e.stopPropagation()}
-        className="bg-white border border-zinc-200 rounded-xl p-5 w-full max-w-sm shadow-xl"
+        className="bg-white border border-zinc-200 rounded-xl p-5 w-full max-w-sm shadow-xl max-h-[95vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-4">
           <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500">
@@ -598,6 +774,21 @@ function ManualEntryModal({
               </button>
             ))}
           </div>
+        </Field>
+
+        <Field label="PROJECT">
+          <select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            required
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+          >
+            {categoryNamesFor(entity).map(c => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <div className="grid grid-cols-2 gap-3">

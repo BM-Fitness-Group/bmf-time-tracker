@@ -88,7 +88,8 @@ export default function Live() {
                 <div className="flex-1 min-w-0">
                   <div className="font-bold truncate">{r.employee?.full_name}</div>
                   <div className="text-[11px] text-zinc-500 mt-0.5">
-                    {r.entity} · Clocked in {fmtClock(r.clock_in)}
+                    {r.entity}
+                    {r.category && ` · ${r.category}`} · Clocked in {fmtClock(r.clock_in)}
                     {onBreak && ' · ON BREAK'}
                   </div>
                 </div>

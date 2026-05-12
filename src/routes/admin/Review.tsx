@@ -12,6 +12,7 @@ import {
   weekEnd,
   weekStart,
 } from '@/lib/time'
+import { categoryNamesFor } from '@/lib/categories'
 import type { Employee, EntityName, TimeEntry } from '@/types/db'
 
 const ENTITIES: EntityName[] = ['Corporate', 'Plano', 'Dallas']
@@ -244,6 +245,7 @@ export default function Review() {
             <tr>
               <th className="text-left p-3">DAY</th>
               <th className="text-left p-3">ENTITY</th>
+              <th className="text-left p-3">PROJECT</th>
               <th className="text-left p-3">IN</th>
               <th className="text-left p-3">OUT</th>
               <th className="text-left p-3">BREAK</th>
@@ -255,13 +257,13 @@ export default function Review() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="p-4 text-zinc-500 text-center text-sm">
+                <td colSpan={9} className="p-4 text-zinc-500 text-center text-sm">
                   Loading…
                 </td>
               </tr>
             ) : entries.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-6 text-zinc-500 text-center text-sm">
+                <td colSpan={9} className="p-6 text-zinc-500 text-center text-sm">
                   No entries for this week.
                 </td>
               </tr>
@@ -355,11 +357,22 @@ function EntryEditRow({
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
     entity: entry.entity,
+    category: entry.category ?? categoryNamesFor(entry.entity)[0],
     clock_in: toLocalInput(entry.clock_in),
     clock_out: entry.clock_out ? toLocalInput(entry.clock_out) : '',
     break_minutes: entry.break_minutes,
     notes: entry.notes,
   })
+
+  // Keep category valid when entity changes — if the prior category isn't
+  // available in the new entity, reset to that entity's first option.
+  useEffect(() => {
+    if (!editing) return
+    const valid = categoryNamesFor(form.entity)
+    if (!valid.includes(form.category)) {
+      setForm(f => ({ ...f, category: valid[0] }))
+    }
+  }, [form.entity, form.category, editing])
 
   const dayLabel = new Date(entry.clock_in).toLocaleDateString([], {
     weekday: 'short',
@@ -373,6 +386,7 @@ function EntryEditRow({
     if (co && co.getTime() <= ci.getTime()) return
     await onUpdate(entry.id, {
       entity: form.entity,
+      category: form.category,
       clock_in: ci.toISOString(),
       clock_out: co ? co.toISOString() : null,
       break_minutes: form.break_minutes,
@@ -396,6 +410,19 @@ function EntryEditRow({
             {ENTITIES.map(n => (
               <option key={n} value={n}>
                 {n}
+              </option>
+            ))}
+          </select>
+        </td>
+        <td className="p-2">
+          <select
+            value={form.category}
+            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+            className="bg-white border border-zinc-300 rounded px-2 py-1 text-xs max-w-[140px]"
+          >
+            {categoryNamesFor(form.entity).map(c => (
+              <option key={c} value={c}>
+                {c}
               </option>
             ))}
           </select>
@@ -464,6 +491,9 @@ function EntryEditRow({
             <span className="text-[9px] tracking-widest text-zinc-600">M</span>
           )}
         </div>
+      </td>
+      <td className="p-3 text-xs">
+        {entry.category ?? <span className="text-zinc-400">—</span>}
       </td>
       <td className="p-3 text-xs tabular-nums">{fmtClock(entry.clock_in)}</td>
       <td className="p-3 text-xs tabular-nums">

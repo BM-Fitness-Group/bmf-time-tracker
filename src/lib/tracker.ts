@@ -5,6 +5,7 @@ import type { ActiveSession, EntityName, TimeEntry } from '@/types/db'
 
 type ManualEntryInput = {
   entity: EntityName
+  category: string
   clock_in: string // ISO
   clock_out: string // ISO
   break_minutes: number
@@ -94,7 +95,7 @@ export function useTracker(employeeId: string | null) {
   }, [employeeId, loadAll])
 
   const clockIn = useCallback(
-    async (entity: EntityName, notes = '') => {
+    async (entity: EntityName, category: string, notes = '') => {
       if (!employeeId) return
       const now = new Date().toISOString()
       const { data, error } = await supabase
@@ -102,6 +103,7 @@ export function useTracker(employeeId: string | null) {
         .insert({
           employee_id: employeeId,
           entity,
+          category,
           clock_in: now,
           break_start: null,
           break_minutes: 0,
@@ -114,7 +116,7 @@ export function useTracker(employeeId: string | null) {
         return
       }
       setActiveSession(data)
-      await logAudit('clock_in', 'active_session', employeeId, { entity })
+      await logAudit('clock_in', 'active_session', employeeId, { entity, category })
     },
     [employeeId, logAudit],
   )
@@ -136,6 +138,7 @@ export function useTracker(employeeId: string | null) {
       .insert({
         employee_id: employeeId,
         entity: activeSession.entity,
+        category: activeSession.category,
         clock_in: activeSession.clock_in,
         clock_out: now,
         break_minutes: finalBreak,
@@ -163,21 +166,22 @@ export function useTracker(employeeId: string | null) {
     setEntries(prev => [inserted, ...prev])
     await logAudit('clock_out', 'time_entry', inserted.id, {
       entity: inserted.entity,
+      category: inserted.category,
       break_minutes: finalBreak,
     })
     return inserted
   }, [activeSession, employeeId, logAudit])
 
-  const switchEntity = useCallback(
-    async (next: EntityName, notes = '') => {
+  const switchTo = useCallback(
+    async (next_entity: EntityName, next_category: string, notes = '') => {
       const prev = await clockOut()
       if (prev) {
-        await logAudit('switch_entity', 'time_entry', prev.id, {
-          from: prev.entity,
-          to: next,
+        await logAudit('switch', 'time_entry', prev.id, {
+          from: { entity: prev.entity, category: prev.category },
+          to: { entity: next_entity, category: next_category },
         })
       }
-      await clockIn(next, notes)
+      await clockIn(next_entity, next_category, notes)
     },
     [clockIn, clockOut, logAudit],
   )
@@ -236,6 +240,28 @@ export function useTracker(employeeId: string | null) {
     [activeSession, employeeId],
   )
 
+  const updateActiveCategory = useCallback(
+    async (category: string) => {
+      if (!employeeId || !activeSession) return
+      const { data, error } = await supabase
+        .from('active_sessions')
+        .update({ category })
+        .eq('employee_id', employeeId)
+        .select('*')
+        .single()
+      if (error) {
+        setError(error.message)
+        return
+      }
+      setActiveSession(data)
+      await logAudit('update_active_category', 'active_session', employeeId, {
+        before: activeSession.category,
+        after: category,
+      })
+    },
+    [activeSession, employeeId, logAudit],
+  )
+
   const updateEntryNotes = useCallback(
     async (entryId: string, notes: string) => {
       const target = entries.find(e => e.id === entryId)
@@ -259,6 +285,32 @@ export function useTracker(employeeId: string | null) {
     [entries, logAudit],
   )
 
+  // Reclassify a completed entry to a different (entity, category) pair —
+  // the "bulk edit" / retroactive fix path. Locked by is_approved like
+  // notes editing.
+  const updateEntryCategory = useCallback(
+    async (entryId: string, entity: EntityName, category: string) => {
+      const target = entries.find(e => e.id === entryId)
+      if (!target || target.is_approved) return
+      const { data, error } = await supabase
+        .from('time_entries')
+        .update({ entity, category })
+        .eq('id', entryId)
+        .select('*')
+        .single()
+      if (error) {
+        setError(error.message)
+        return
+      }
+      setEntries(prev => prev.map(e => (e.id === entryId ? data : e)))
+      await logAudit('update_entry', 'time_entry', entryId, {
+        before: { entity: target.entity, category: target.category },
+        after: { entity, category },
+      })
+    },
+    [entries, logAudit],
+  )
+
   const deleteEntry = useCallback(
     async (entryId: string) => {
       const target = entries.find(e => e.id === entryId)
@@ -271,6 +323,7 @@ export function useTracker(employeeId: string | null) {
       setEntries(prev => prev.filter(e => e.id !== entryId))
       await logAudit('delete_entry', 'time_entry', entryId, {
         entity: target.entity,
+        category: target.category,
         clock_in: target.clock_in,
       })
     },
@@ -285,6 +338,7 @@ export function useTracker(employeeId: string | null) {
         .insert({
           employee_id: employeeId,
           entity: input.entity,
+          category: input.category,
           clock_in: input.clock_in,
           clock_out: input.clock_out,
           break_minutes: input.break_minutes,
@@ -307,6 +361,7 @@ export function useTracker(employeeId: string | null) {
       )
       await logAudit('manual_entry', 'time_entry', data.id, {
         entity: data.entity,
+        category: data.category,
         clock_in: data.clock_in,
         clock_out: data.clock_out,
       })
@@ -334,11 +389,13 @@ export function useTracker(employeeId: string | null) {
     error,
     clockIn,
     clockOut,
-    switchEntity,
+    switchTo,
     startBreak,
     endBreak,
     updateNotes,
+    updateActiveCategory,
     updateEntryNotes,
+    updateEntryCategory,
     deleteEntry,
     addManualEntry,
     refresh: loadAll,
