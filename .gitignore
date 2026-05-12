@@ -30,3 +30,6 @@ dist-ssr
 
 # Claude Code local settings (project config can commit, local-only stays local)
 .claude/settings.local.json
+
+# Local working folder for spec/idea docs — not part of the codebase
+Jeremy Ideas/
