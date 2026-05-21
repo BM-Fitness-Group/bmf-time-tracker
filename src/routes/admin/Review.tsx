@@ -13,6 +13,7 @@ import {
   weekStart,
 } from '@/lib/time'
 import { categoryNamesFor } from '@/lib/categories'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import type { Employee, EntityName, TimeEntry } from '@/types/db'
 
 const ENTITIES: EntityName[] = ['Corporate', 'Plano', 'Dallas']
@@ -36,6 +37,7 @@ export default function Review() {
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<TimeEntry | null>(null)
   const { employee: me } = useAuth()
 
   const isEveryone = selectedId === ALL
@@ -372,7 +374,7 @@ export default function Review() {
                   }
                   locked={!!approvals[e.employee_id]}
                   onUpdate={updateEntry}
-                  onDelete={deleteEntry}
+                  onRequestDelete={setPendingDelete}
                 />
               ))
             )}
@@ -473,6 +475,30 @@ export default function Review() {
           )}
         </div>
       )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          danger
+          title="Delete time entry?"
+          message={
+            `This will permanently remove the ${pendingDelete.entity}` +
+            `${pendingDelete.category ? ` · ${pendingDelete.category}` : ''} entry from ` +
+            `${new Date(pendingDelete.clock_in).toLocaleDateString([], {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })} (${fmtHours(entryHours(pendingDelete))}h). ` +
+            `It is logged in the audit trail and can be recreated, but not undone with one click.`
+          }
+          confirmLabel="DELETE ENTRY"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={async () => {
+            const target = pendingDelete
+            setPendingDelete(null)
+            await deleteEntry(target.id)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -482,14 +508,14 @@ function EntryEditRow({
   employeeName,
   locked,
   onUpdate,
-  onDelete,
+  onRequestDelete,
 }: {
   entry: TimeEntry
   // Non-null only in "Everyone" mode — renders a leading NAME cell.
   employeeName: string | null
   locked: boolean
   onUpdate: (id: string, patch: Partial<TimeEntry>) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onRequestDelete: (entry: TimeEntry) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({
@@ -660,7 +686,7 @@ function EntryEditRow({
               EDIT
             </button>
             <button
-              onClick={() => onDelete(entry.id)}
+              onClick={() => onRequestDelete(entry)}
               className="text-zinc-500 hover:text-red-700"
               aria-label="delete entry"
             >

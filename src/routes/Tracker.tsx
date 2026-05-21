@@ -23,6 +23,7 @@ import {
 import { CATEGORIES_BY_ENTITY, categoryNamesFor } from '@/lib/categories'
 import OvertimeBanner from '@/components/OvertimeBanner'
 import LongSessionBanner from '@/components/LongSessionBanner'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import type { ActiveSession, EntityName, TimeEntry } from '@/types/db'
 
 const ENTITIES: EntityName[] = ['Corporate', 'Plano', 'Dallas']
@@ -37,6 +38,7 @@ export default function Tracker() {
   const { employee, signOut } = useAuth()
   const tracker = useTracker(employee?.id ?? null)
   const [manualOpen, setManualOpen] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<TimeEntry | null>(null)
 
   if (!employee) return null
 
@@ -80,7 +82,7 @@ export default function Tracker() {
 
         <EntriesList
           entries={tracker.todaysEntries}
-          onDelete={tracker.deleteEntry}
+          onRequestDelete={setPendingDelete}
           onUpdateNotes={tracker.updateEntryNotes}
           onUpdateCategory={tracker.updateEntryCategory}
         />
@@ -113,6 +115,26 @@ export default function Tracker() {
           onSubmit={async input => {
             await tracker.addManualEntry(input)
             setManualOpen(false)
+          }}
+        />
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          danger
+          title="Delete this entry?"
+          message={
+            `This removes your ${pendingDelete.entity}` +
+            `${pendingDelete.category ? ` · ${pendingDelete.category}` : ''} entry ` +
+            `(${fmtHours(entryHours(pendingDelete))}h). This can't be undone — ` +
+            `if it was a mistake, you'll need to clock the time again or ask an admin.`
+          }
+          confirmLabel="DELETE"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={async () => {
+            const target = pendingDelete
+            setPendingDelete(null)
+            await tracker.deleteEntry(target.id)
           }}
         />
       )}
@@ -540,12 +562,12 @@ function ActiveSessionCard({
 
 function EntriesList({
   entries,
-  onDelete,
+  onRequestDelete,
   onUpdateNotes,
   onUpdateCategory,
 }: {
   entries: TimeEntry[]
-  onDelete: (id: string) => Promise<unknown>
+  onRequestDelete: (entry: TimeEntry) => void
   onUpdateNotes: (id: string, notes: string) => Promise<unknown>
   onUpdateCategory: (id: string, entity: EntityName, category: string) => Promise<unknown>
 }) {
@@ -560,7 +582,7 @@ function EntriesList({
           <EntryRow
             key={e.id}
             entry={e}
-            onDelete={onDelete}
+            onRequestDelete={onRequestDelete}
             onUpdateNotes={onUpdateNotes}
             onUpdateCategory={onUpdateCategory}
           />
@@ -572,12 +594,12 @@ function EntriesList({
 
 function EntryRow({
   entry,
-  onDelete,
+  onRequestDelete,
   onUpdateNotes,
   onUpdateCategory,
 }: {
   entry: TimeEntry
-  onDelete: (id: string) => Promise<unknown>
+  onRequestDelete: (entry: TimeEntry) => void
   onUpdateNotes: (id: string, notes: string) => Promise<unknown>
   onUpdateCategory: (id: string, entity: EntityName, category: string) => Promise<unknown>
 }) {
@@ -625,7 +647,7 @@ function EntryRow({
         </div>
         {!entry.is_approved && (
           <button
-            onClick={() => onDelete(entry.id)}
+            onClick={() => onRequestDelete(entry)}
             className="text-zinc-400 hover:text-red-700"
             aria-label="delete entry"
           >
