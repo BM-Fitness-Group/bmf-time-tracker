@@ -49,7 +49,7 @@ function addPayrollSubmissionSheet(
     views: [{ state: 'frozen', ySplit: 4 }],
   })
   ws.columns = [
-    { width: 22 }, // Pay Period
+    { width: 26 }, // Pay Period Ending (single date)
     { width: 22 }, // Employee
     { width: 12 }, // Entity
     { width: 28 }, // Bucket
@@ -70,7 +70,7 @@ function addPayrollSubmissionSheet(
 
   const header = ws.getRow(4)
   header.values = [
-    'Pay Period',
+    'Pay Period Ending',
     'Employee',
     'Entity',
     'Payroll Bucket',
@@ -82,7 +82,9 @@ function addPayrollSubmissionSheet(
     c.border = { bottom: { style: 'thin' } }
   })
 
-  const periodLabel = `${toDateOnly(weekStart)} to ${toDateOnly(weekEnd)}`
+  // Single date (the week-ending Sunday), e.g. "Sunday, May 17, 2026" —
+  // the full pay-period range is already in the A2 header line above.
+  const periodLabel = formatFullDate(weekEnd)
 
   // Aggregate hours per (employee, entity, bucket, gl_code). Track unapproved
   // employees so we can flag them in the output.
@@ -383,6 +385,16 @@ function formatShortDate(d: Date): string {
   // "Apr 22, 2026" — Detail sheet, where weekday is a separate column.
   return d.toLocaleDateString([], {
     month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatFullDate(d: Date): string {
+  // "Sunday, May 17, 2026" — long weekday + long month.
+  return d.toLocaleDateString([], {
+    weekday: 'long',
+    month: 'long',
     day: 'numeric',
     year: 'numeric',
   })
