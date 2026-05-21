@@ -338,7 +338,7 @@ export default function Review() {
         </div>
       )}
 
-      <div className="bg-white border border-zinc-200 shadow-sm rounded-xl overflow-hidden mb-4">
+      <div className="bg-white border border-zinc-200 shadow-sm rounded-xl overflow-x-auto mb-4">
         <table className="w-full text-sm">
           <thead className="bg-zinc-50 text-[10px] font-bold tracking-[0.3em] text-zinc-500">
             <tr>
@@ -351,7 +351,7 @@ export default function Review() {
               <th className="text-left p-3">BREAK</th>
               <th className="text-right p-3">HRS</th>
               <th className="text-left p-3 hidden md:table-cell">NOTES</th>
-              <th />
+              <th className="sticky right-0 bg-zinc-50" />
             </tr>
           </thead>
           <tbody>
@@ -634,7 +634,7 @@ function EntryEditRow({
             className="bg-white border border-zinc-300 rounded px-2 py-1 text-xs w-full"
           />
         </td>
-        <td className="p-2 whitespace-nowrap">
+        <td className="p-2 whitespace-nowrap sticky right-0 bg-red-50 border-l border-zinc-200">
           <button
             onClick={() => setEditing(false)}
             className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-red-800 mr-2"
@@ -681,7 +681,7 @@ function EntryEditRow({
       <td className="p-3 text-xs text-zinc-500 hidden md:table-cell truncate max-w-[180px]">
         {entry.notes || '—'}
       </td>
-      <td className="p-3 whitespace-nowrap text-right">
+      <td className="p-3 whitespace-nowrap text-right sticky right-0 bg-white border-l border-zinc-200">
         {locked ? (
           <Lock className="w-3 h-3 text-green-700 inline" />
         ) : (
