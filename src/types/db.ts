@@ -30,6 +30,8 @@ export type TimeEntry = {
   is_approved: boolean
   clock_in_location: GeoPoint | null
   clock_out_location: GeoPoint | null
+  // Soft-delete marker. NULL = live entry; a timestamp = in the Trash.
+  deleted_at: string | null
   created_at: string
   updated_at: string
 }
@@ -83,10 +85,11 @@ export type Database = {
       }
       time_entries: {
         Row: TimeEntry
-        Insert: Omit<TimeEntry, 'id' | 'created_at' | 'updated_at'> & {
+        Insert: Omit<TimeEntry, 'id' | 'created_at' | 'updated_at' | 'deleted_at'> & {
           id?: string
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Update: Partial<TimeEntry>
         Relationships: []

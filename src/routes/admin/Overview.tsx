@@ -31,6 +31,7 @@ export default function Overview() {
         supabase
           .from('time_entries')
           .select('*')
+          .is('deleted_at', null)
           .gte('clock_in', ws)
           .lt('clock_in', we),
         supabase

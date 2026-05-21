@@ -47,6 +47,7 @@ export default function Export() {
       supabase
         .from('time_entries')
         .select('*')
+        .is('deleted_at', null)
         .gte('clock_in', weekStartDate.toISOString())
         .lt('clock_in', weekEndDate.toISOString()),
       supabase

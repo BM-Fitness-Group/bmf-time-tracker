@@ -70,6 +70,7 @@ export default function Review() {
     let entryQuery = supabase
       .from('time_entries')
       .select('*')
+      .is('deleted_at', null)
       .gte('clock_in', weekStartDate.toISOString())
       .lt('clock_in', weekEndDate.toISOString())
       .order('clock_in', { ascending: true })
@@ -155,16 +156,20 @@ export default function Review() {
     await logAudit(me?.id, 'update_entry', id, { before, after: data })
   }
 
+  // Soft delete — stamp deleted_at. Recoverable from the admin Trash page.
   const deleteEntry = async (id: string) => {
     const target = entries.find(e => e.id === id)
     if (!target) return
-    const { error } = await supabase.from('time_entries').delete().eq('id', id)
+    const { error } = await supabase
+      .from('time_entries')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
     if (error) {
       setErr(error.message)
       return
     }
     setEntries(prev => prev.filter(e => e.id !== id))
-    await logAudit(me?.id, 'delete_entry', id, target)
+    await logAudit(me?.id, 'delete_entry', id, { ...target, soft_delete: true })
   }
 
   // Approve a single employee's week. Returns an error string or null.

@@ -10,6 +10,7 @@ import AdminEmployees from '@/routes/admin/Employees'
 import AdminReview from '@/routes/admin/Review'
 import AdminExport from '@/routes/admin/Export'
 import AdminAudit from '@/routes/admin/Audit'
+import AdminTrash from '@/routes/admin/Trash'
 import { RequireAuth, RequireAdmin } from '@/auth/AuthContext'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="review" element={<AdminReview />} />
               <Route path="export" element={<AdminExport />} />
               <Route path="audit" element={<AdminAudit />} />
+              <Route path="trash" element={<AdminTrash />} />
             </Route>
           </Route>
         </Route>

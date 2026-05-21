@@ -54,6 +54,7 @@ export function useTracker(employeeId: string | null) {
         .from('time_entries')
         .select('*')
         .eq('employee_id', employeeId)
+        .is('deleted_at', null)
         .gte('clock_in', ws)
         .lt('clock_in', we)
         .order('clock_in', { ascending: false }),
@@ -311,11 +312,16 @@ export function useTracker(employeeId: string | null) {
     [entries, logAudit],
   )
 
+  // Soft delete — stamp deleted_at so the row drops out of all normal
+  // views but can be restored from the admin Trash page.
   const deleteEntry = useCallback(
     async (entryId: string) => {
       const target = entries.find(e => e.id === entryId)
       if (!target || target.is_approved) return
-      const { error } = await supabase.from('time_entries').delete().eq('id', entryId)
+      const { error } = await supabase
+        .from('time_entries')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', entryId)
       if (error) {
         setError(error.message)
         return
@@ -325,6 +331,7 @@ export function useTracker(employeeId: string | null) {
         entity: target.entity,
         category: target.category,
         clock_in: target.clock_in,
+        soft_delete: true,
       })
     },
     [entries, logAudit],

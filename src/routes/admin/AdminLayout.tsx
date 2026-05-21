@@ -9,6 +9,7 @@ const NAV = [
   { to: '/admin/review', label: 'REVIEW', end: false },
   { to: '/admin/export', label: 'EXPORT', end: false },
   { to: '/admin/audit', label: 'AUDIT', end: false },
+  { to: '/admin/trash', label: 'TRASH', end: false },
 ]
 
 export default function AdminLayout() {
