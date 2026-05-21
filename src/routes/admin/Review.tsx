@@ -678,8 +678,10 @@ function EntryEditRow({
       <td className="p-3 text-right text-sm font-black tabular-nums">
         {fmtHours(hrs)}
       </td>
-      <td className="p-3 text-xs text-zinc-500 hidden md:table-cell truncate max-w-[180px]">
-        {entry.notes || '—'}
+      <td className="p-3 text-xs text-zinc-500 hidden md:table-cell align-top">
+        <div className="w-[260px] whitespace-pre-wrap break-words">
+          {entry.notes || '—'}
+        </div>
       </td>
       <td className="p-3 whitespace-nowrap text-right sticky right-0 bg-white border-l border-zinc-200">
         {locked ? (
