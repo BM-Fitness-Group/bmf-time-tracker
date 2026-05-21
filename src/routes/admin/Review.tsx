@@ -343,7 +343,7 @@ export default function Review() {
           <thead className="bg-zinc-50 text-[10px] font-bold tracking-[0.3em] text-zinc-500">
             <tr>
               {isEveryone && <th className="text-left p-3">NAME</th>}
-              <th className="text-left p-3">DAY</th>
+              <th className="text-left p-3">DATE</th>
               <th className="text-left p-3">ENTITY</th>
               <th className="text-left p-3">PROJECT</th>
               <th className="text-left p-3">IN</th>
@@ -540,10 +540,12 @@ function EntryEditRow({
     }
   }, [form.entity, form.category, editing])
 
+  // Full date, e.g. "Friday, May 17, 2025".
   const dayLabel = new Date(entry.clock_in).toLocaleDateString([], {
-    weekday: 'short',
-    month: 'numeric',
+    weekday: 'long',
+    month: 'long',
     day: 'numeric',
+    year: 'numeric',
   })
 
   const save = async () => {
