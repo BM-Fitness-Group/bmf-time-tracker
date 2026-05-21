@@ -74,11 +74,15 @@ export default function Export() {
       list.push(e)
       byEmployee.set(e.employee_id, list)
     }
-    const combined: Row[] = employees.map(emp => ({
-      employee: emp,
-      entries: byEmployee.get(emp.id) ?? [],
-      approved: approvedIds.has(emp.id),
-    }))
+    // Only list employees who actually clocked time this week — an
+    // employee with zero entries has nothing to export and is just noise.
+    const combined: Row[] = employees
+      .map(emp => ({
+        employee: emp,
+        entries: byEmployee.get(emp.id) ?? [],
+        approved: approvedIds.has(emp.id),
+      }))
+      .filter(r => r.entries.length > 0)
     setRows(combined)
     setSelected(new Set(combined.filter(r => r.approved).map(r => r.employee.id)))
     setLoading(false)
