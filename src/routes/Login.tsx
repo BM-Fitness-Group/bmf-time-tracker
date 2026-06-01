@@ -66,16 +66,18 @@ export default function Login() {
     <div className="min-h-screen bg-white text-zinc-900 flex items-center justify-center p-5">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-black tracking-tighter leading-none text-red-800">
-            BMF
-          </h1>
-          <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mt-1">
+          <img
+            src="/bmf-logo-horizontal.png"
+            alt="Body Machine Fitness"
+            className="h-10 mx-auto"
+          />
+          <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mt-3">
             TIME TRACKER
           </div>
         </div>
 
         {unauthorized && (
-          <div className="mb-5 border border-red-300 bg-red-50 rounded-lg p-3 text-xs text-red-800">
+          <div className="mb-5 border border-red-300 bg-brand-soft rounded-lg p-3 text-xs text-brand">
             Your email isn&apos;t registered. Contact your admin to be added.
           </div>
         )}
@@ -93,7 +95,7 @@ export default function Login() {
                 setSent(false)
                 setEmail('')
               }}
-              className="mt-4 text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800"
+              className="mt-4 text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-brand"
             >
               USE DIFFERENT EMAIL
             </button>
@@ -129,13 +131,13 @@ export default function Login() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@bodymachinefitness.com"
-                className="w-full bg-white border border-zinc-300 rounded-lg px-4 py-3 mb-4 text-zinc-900 placeholder-zinc-400 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+                className="w-full bg-white border border-zinc-300 rounded-lg px-4 py-3 mb-4 text-zinc-900 placeholder-zinc-400 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
               />
-              {err && <div className="text-xs text-red-700 mb-3">{err}</div>}
+              {err && <div className="text-xs text-brand mb-3">{err}</div>}
               <button
                 type="submit"
                 disabled={sending || !email || microsoftBusy}
-                className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-3 rounded-lg transition flex items-center justify-center gap-2 text-sm tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
+                className="w-full bg-brand hover:bg-brand-hover text-white font-black py-3 rounded-lg transition flex items-center justify-center gap-2 text-sm tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
               >
                 <LogIn className="w-4 h-4" />
                 {sending ? 'SENDING...' : 'SEND MAGIC LINK'}

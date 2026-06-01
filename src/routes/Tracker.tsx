@@ -52,7 +52,7 @@ export default function Tracker() {
         />
 
         {tracker.error && (
-          <div className="mb-4 border border-red-300 bg-red-50 rounded-lg p-3 text-xs text-red-800">
+          <div className="mb-4 border border-red-300 bg-brand-soft rounded-lg p-3 text-xs text-brand">
             {tracker.error}
           </div>
         )}
@@ -91,7 +91,7 @@ export default function Tracker() {
           {employee.role === 'admin' ? (
             <button
               onClick={() => setManualOpen(true)}
-              className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800 flex items-center gap-2"
+              className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-brand flex items-center gap-2"
             >
               <Plus className="w-3 h-3" />
               MANUAL ENTRY
@@ -101,7 +101,7 @@ export default function Tracker() {
           )}
           <button
             onClick={() => tracker.refresh()}
-            className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800 flex items-center gap-2"
+            className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-brand flex items-center gap-2"
           >
             <RefreshCw className="w-3 h-3" />
             REFRESH
@@ -153,11 +153,13 @@ function Header({
 }) {
   return (
     <div className="flex items-center justify-between mb-5 pb-4 border-b border-zinc-200">
-      <div>
-        <h1 className="text-2xl font-black tracking-tighter leading-none text-red-800">
-          BMF
-        </h1>
-        <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mt-1">
+      <div className="flex items-center gap-3">
+        <img
+          src="/bmf-logo-circle.png"
+          alt="BMF"
+          className="h-10 w-10"
+        />
+        <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500">
           TIME TRACKER
         </div>
       </div>
@@ -167,7 +169,7 @@ function Header({
           {isAdmin && (
             <Link
               to="/admin"
-              className="text-[10px] font-bold tracking-[0.3em] text-red-700 hover:text-red-900"
+              className="text-[10px] font-bold tracking-[0.3em] text-brand hover:text-brand-hover"
             >
               ADMIN →
             </Link>
@@ -175,7 +177,7 @@ function Header({
         </div>
         <button
           onClick={onSignOut}
-          className="text-zinc-500 hover:text-red-800"
+          className="text-zinc-500 hover:text-brand"
           aria-label="sign out"
         >
           <LogOut className="w-4 h-4" />
@@ -260,7 +262,7 @@ function EntityCategoryPicker({
             }}
             className={`p-3 rounded-lg border text-left transition ${
               pendingEntity === name
-                ? 'border-red-700 bg-red-50 ring-1 ring-red-700/20'
+                ? 'border-brand bg-brand-soft ring-1 ring-brand/20'
                 : 'border-zinc-200 hover:border-zinc-400 bg-zinc-50'
             }`}
           >
@@ -295,7 +297,7 @@ function EntityCategoryPicker({
                   onClick={() => onChange(pendingEntity, catName)}
                   className={`p-2 rounded-lg border text-xs font-bold tracking-wide transition ${
                     isPicked
-                      ? 'border-red-700 bg-red-50 ring-1 ring-red-700/20 text-zinc-900'
+                      ? 'border-brand bg-brand-soft ring-1 ring-brand/20 text-zinc-900'
                       : isCurrent
                       ? 'border-zinc-200 bg-zinc-50 text-zinc-400'
                       : 'border-zinc-200 hover:border-zinc-400 bg-white text-zinc-700'
@@ -358,12 +360,12 @@ function ClockInCard({
         onChange={e => setNotes(e.target.value)}
         rows={2}
         placeholder="Notes (optional)"
-        className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 mb-4 text-sm placeholder-zinc-400 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20 resize-none"
+        className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 mb-4 text-sm placeholder-zinc-400 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 resize-none"
       />
       <button
         onClick={go}
         disabled={!entity || !category || busy || loading}
-        className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-4 rounded-lg transition flex items-center justify-center gap-2 tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
+        className="w-full bg-brand hover:bg-brand-hover text-white font-black py-4 rounded-lg transition flex items-center justify-center gap-2 tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
       >
         <Clock className="w-4 h-4" />
         {busy ? 'STARTING...' : 'CLOCK IN'}
@@ -506,7 +508,7 @@ function ActiveSessionCard({
         onBlur={saveNotes}
         rows={2}
         placeholder="Notes / project detail"
-        className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 mb-4 text-sm placeholder-zinc-400 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20 resize-none"
+        className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 mb-4 text-sm placeholder-zinc-400 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 resize-none"
       />
 
       <div className="grid grid-cols-2 gap-2 mb-2">
@@ -551,7 +553,7 @@ function ActiveSessionCard({
       <button
         onClick={() => withBusy('out', onClockOut)}
         disabled={busy !== null}
-        className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-4 rounded-lg transition tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400 flex items-center justify-center gap-2"
+        className="w-full bg-brand hover:bg-brand-hover text-white font-black py-4 rounded-lg transition tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400 flex items-center justify-center gap-2"
       >
         <LogOut className="w-4 h-4" />
         {busy === 'out' ? 'CLOCKING OUT...' : 'CLOCK OUT'}
@@ -648,7 +650,7 @@ function EntryRow({
         {!entry.is_approved && (
           <button
             onClick={() => onRequestDelete(entry)}
-            className="text-zinc-400 hover:text-red-700"
+            className="text-zinc-400 hover:text-brand"
             aria-label="delete entry"
           >
             <Trash2 className="w-4 h-4" />
@@ -674,7 +676,7 @@ function EntryRow({
         <div className="mt-1">
           <button
             onClick={() => setReclassOpen(o => !o)}
-            className="text-[10px] font-bold tracking-widest text-zinc-500 hover:text-red-800"
+            className="text-[10px] font-bold tracking-widest text-zinc-500 hover:text-brand"
           >
             {reclassOpen ? 'CLOSE' : 'RECLASSIFY ENTITY / PROJECT'}
           </button>
@@ -779,7 +781,7 @@ function ManualEntryModal({
             value={date}
             onChange={e => setDate(e.target.value)}
             required
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           />
         </Field>
 
@@ -792,7 +794,7 @@ function ManualEntryModal({
                 onClick={() => setEntity(name)}
                 className={`py-2 rounded border text-[10px] font-bold tracking-widest ${
                   entity === name
-                    ? 'border-red-700 bg-red-50 ring-1 ring-red-700/20'
+                    ? 'border-brand bg-brand-soft ring-1 ring-brand/20'
                     : 'border-zinc-300 hover:border-zinc-500'
                 }`}
               >
@@ -807,7 +809,7 @@ function ManualEntryModal({
             value={category}
             onChange={e => setCategory(e.target.value)}
             required
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           >
             {categoryNamesFor(entity).map(c => (
               <option key={c} value={c}>
@@ -824,7 +826,7 @@ function ManualEntryModal({
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
               required
-              className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+              className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
             />
           </Field>
           <Field label="CLOCK OUT">
@@ -833,7 +835,7 @@ function ManualEntryModal({
               value={endTime}
               onChange={e => setEndTime(e.target.value)}
               required
-              className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+              className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
             />
           </Field>
         </div>
@@ -844,7 +846,7 @@ function ManualEntryModal({
             min={0}
             value={breakMinutes}
             onChange={e => setBreakMinutes(parseInt(e.target.value || '0', 10))}
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           />
         </Field>
 
@@ -853,16 +855,16 @@ function ManualEntryModal({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={2}
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm placeholder-zinc-400 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20 resize-none"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm placeholder-zinc-400 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 resize-none"
           />
         </Field>
 
-        {err && <div className="text-xs text-red-700 mb-3">{err}</div>}
+        {err && <div className="text-xs text-brand mb-3">{err}</div>}
 
         <button
           type="submit"
           disabled={busy}
-          className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-3 rounded-lg tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
+          className="w-full bg-brand hover:bg-brand-hover text-white font-black py-3 rounded-lg tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
         >
           {busy ? 'SAVING...' : 'SAVE ENTRY'}
         </button>

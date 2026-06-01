@@ -9,8 +9,8 @@ export default function InstallBanner() {
   return (
     <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm bg-white border border-zinc-200 rounded-xl p-4 shadow-xl z-40">
       <div className="flex items-start gap-3">
-        <div className="bg-red-50 rounded-lg p-2 shrink-0">
-          <Download className="w-5 h-5 text-red-800" />
+        <div className="bg-brand-soft rounded-lg p-2 shrink-0">
+          <Download className="w-5 h-5 text-brand" />
         </div>
         <div className="flex-1 min-w-0">
           {state.kind === 'prompt' ? (
@@ -24,7 +24,7 @@ export default function InstallBanner() {
               <div className="flex gap-2">
                 <button
                   onClick={() => void state.trigger()}
-                  className="bg-red-800 hover:bg-red-900 text-white font-black px-3 py-1.5 rounded text-[10px] tracking-widest"
+                  className="bg-brand hover:bg-brand-hover text-white font-black px-3 py-1.5 rounded text-[10px] tracking-widest"
                 >
                   INSTALL
                 </button>

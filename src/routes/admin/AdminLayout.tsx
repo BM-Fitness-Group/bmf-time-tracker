@@ -18,11 +18,13 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-white text-zinc-900">
       <header className="border-b border-zinc-200 px-5 py-4 bg-white">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black tracking-tighter leading-none text-red-800">
-              BMF
-            </h1>
-            <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 mt-1">
+          <div className="flex items-center gap-3">
+            <img
+              src="/bmf-logo-circle.png"
+              alt="BMF"
+              className="h-10 w-10"
+            />
+            <div className="text-[10px] font-bold tracking-[0.3em] text-zinc-500">
               ADMIN CONSOLE
             </div>
           </div>
@@ -31,14 +33,14 @@ export default function AdminLayout() {
               <div className="text-xs text-zinc-600">{employee?.full_name}</div>
               <NavLink
                 to="/app"
-                className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-red-800"
+                className="text-[10px] font-bold tracking-[0.3em] text-zinc-500 hover:text-brand"
               >
                 EMPLOYEE VIEW →
               </NavLink>
             </div>
             <button
               onClick={signOut}
-              className="text-zinc-500 hover:text-red-800"
+              className="text-zinc-500 hover:text-brand"
               aria-label="sign out"
             >
               <LogOut className="w-4 h-4" />
@@ -57,7 +59,7 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `py-3 text-[10px] font-bold tracking-[0.3em] whitespace-nowrap transition border-b-2 ${
                   isActive
-                    ? 'text-red-800 border-red-700'
+                    ? 'text-brand border-brand'
                     : 'text-zinc-500 border-transparent hover:text-zinc-900'
                 }`
               }

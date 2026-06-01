@@ -333,7 +333,7 @@ export default function Review() {
       </div>
 
       {err && (
-        <div className="mb-4 border border-red-300 bg-red-50 rounded-lg p-3 text-xs text-red-800">
+        <div className="mb-4 border border-red-300 bg-brand-soft rounded-lg p-3 text-xs text-brand">
           {err}
         </div>
       )}
@@ -435,7 +435,7 @@ export default function Review() {
             <button
               onClick={approveAll}
               disabled={busy || pendingCount === 0}
-              className="bg-red-800 hover:bg-red-900 text-white font-black px-4 py-3 rounded-lg text-xs tracking-widest flex items-center gap-2 disabled:bg-zinc-200 disabled:text-zinc-400"
+              className="bg-brand hover:bg-brand-hover text-white font-black px-4 py-3 rounded-lg text-xs tracking-widest flex items-center gap-2 disabled:bg-zinc-200 disabled:text-zinc-400"
             >
               <Check className="w-4 h-4" />
               {busy
@@ -471,7 +471,7 @@ export default function Review() {
               <button
                 onClick={approveSingle}
                 disabled={busy || entries.length === 0}
-                className="bg-red-800 hover:bg-red-900 text-white font-black px-4 py-3 rounded-lg text-xs tracking-widest flex items-center gap-2 disabled:bg-zinc-200 disabled:text-zinc-400"
+                className="bg-brand hover:bg-brand-hover text-white font-black px-4 py-3 rounded-lg text-xs tracking-widest flex items-center gap-2 disabled:bg-zinc-200 disabled:text-zinc-400"
               >
                 <Check className="w-4 h-4" />
                 {busy ? 'APPROVING…' : 'APPROVE WEEK'}
@@ -568,7 +568,7 @@ function EntryEditRow({
 
   if (editing && !locked) {
     return (
-      <tr className="border-t border-zinc-200 bg-red-50/40">
+      <tr className="border-t border-zinc-200 bg-brand-soft/40">
         {showName && (
           <td className="p-2 text-xs font-bold whitespace-nowrap">{employeeName}</td>
         )}
@@ -634,16 +634,16 @@ function EntryEditRow({
             className="bg-white border border-zinc-300 rounded px-2 py-1 text-xs w-full"
           />
         </td>
-        <td className="p-2 whitespace-nowrap sticky right-0 bg-red-50 border-l border-zinc-200">
+        <td className="p-2 whitespace-nowrap sticky right-0 bg-brand-soft border-l border-zinc-200">
           <button
             onClick={() => setEditing(false)}
-            className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-red-800 mr-2"
+            className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-brand mr-2"
           >
             CANCEL
           </button>
           <button
             onClick={save}
-            className="text-[10px] font-bold tracking-[0.2em] text-red-800 hover:text-red-900"
+            className="text-[10px] font-bold tracking-[0.2em] text-brand hover:text-brand-hover"
           >
             SAVE
           </button>
@@ -690,13 +690,13 @@ function EntryEditRow({
           <>
             <button
               onClick={() => setEditing(true)}
-              className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-red-800 mr-3"
+              className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-brand mr-3"
             >
               EDIT
             </button>
             <button
               onClick={() => onRequestDelete(entry)}
-              className="text-zinc-500 hover:text-red-700"
+              className="text-zinc-500 hover:text-brand"
               aria-label="delete entry"
             >
               <Trash2 className="w-3 h-3 inline" />

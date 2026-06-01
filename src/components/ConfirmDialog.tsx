@@ -36,7 +36,7 @@ export default function ConfirmDialog({
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            {danger && <AlertTriangle className="w-4 h-4 text-red-700" />}
+            {danger && <AlertTriangle className="w-4 h-4 text-brand" />}
             <div className="text-sm font-black tracking-tight">{title}</div>
           </div>
           <button
@@ -63,7 +63,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             className={`font-black px-4 py-2 rounded-lg text-xs tracking-widest text-white ${
-              danger ? 'bg-red-800 hover:bg-red-900' : 'bg-zinc-900 hover:bg-zinc-700'
+              danger ? 'bg-brand hover:bg-brand-hover' : 'bg-zinc-900 hover:bg-zinc-700'
             }`}
           >
             {confirmLabel}

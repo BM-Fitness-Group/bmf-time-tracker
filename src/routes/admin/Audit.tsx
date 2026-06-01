@@ -59,7 +59,7 @@ export default function Audit() {
           <select
             value={filterActor}
             onChange={e => setFilterActor(e.target.value)}
-            className="bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           >
             <option value="">All actors</option>
             {actors.map(a => (
@@ -71,7 +71,7 @@ export default function Audit() {
           <select
             value={filterAction}
             onChange={e => setFilterAction(e.target.value)}
-            className="bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           >
             <option value="">All actions</option>
             {actionOptions.map(a => (

@@ -94,7 +94,7 @@ export default function Trash() {
       </div>
 
       {err && (
-        <div className="mb-4 border border-red-300 bg-red-50 rounded-lg p-3 text-xs text-red-800">
+        <div className="mb-4 border border-red-300 bg-brand-soft rounded-lg p-3 text-xs text-brand">
           {err}
         </div>
       )}
@@ -152,7 +152,7 @@ export default function Trash() {
                     <button
                       onClick={() => restore(r)}
                       disabled={busy}
-                      className="text-[10px] font-bold tracking-[0.2em] text-zinc-600 hover:text-red-800 mr-3 disabled:opacity-50 inline-flex items-center gap-1"
+                      className="text-[10px] font-bold tracking-[0.2em] text-zinc-600 hover:text-brand mr-3 disabled:opacity-50 inline-flex items-center gap-1"
                     >
                       <RotateCcw className="w-3 h-3" />
                       RESTORE
@@ -160,7 +160,7 @@ export default function Trash() {
                     <button
                       onClick={() => setPendingPurge(r)}
                       disabled={busy}
-                      className="text-zinc-400 hover:text-red-700 disabled:opacity-50"
+                      className="text-zinc-400 hover:text-brand disabled:opacity-50"
                       aria-label="delete permanently"
                       title="Delete permanently"
                     >

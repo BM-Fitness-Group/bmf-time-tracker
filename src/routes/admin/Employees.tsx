@@ -36,7 +36,7 @@ export default function Employees() {
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="bg-red-800 hover:bg-red-900 text-white font-black px-4 py-2 rounded-lg text-xs tracking-widest flex items-center gap-2"
+          className="bg-brand hover:bg-brand-hover text-white font-black px-4 py-2 rounded-lg text-xs tracking-widest flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           ADD
@@ -44,7 +44,7 @@ export default function Employees() {
       </div>
 
       {err && (
-        <div className="mb-4 border border-red-300 bg-red-50 rounded-lg p-3 text-xs text-red-800">
+        <div className="mb-4 border border-red-300 bg-brand-soft rounded-lg p-3 text-xs text-brand">
           {err}
         </div>
       )}
@@ -142,12 +142,12 @@ function EmployeeRow({
           <input
             value={name}
             onChange={e => setName(e.target.value)}
-            className="bg-white border border-zinc-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20 w-full"
+            className="bg-white border border-zinc-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 w-full"
           />
         ) : (
           <div className="flex items-center gap-2">
             {employee.role === 'admin' ? (
-              <Shield className="w-3 h-3 text-red-700" />
+              <Shield className="w-3 h-3 text-brand" />
             ) : (
               <User className="w-3 h-3 text-zinc-500" />
             )}
@@ -162,7 +162,7 @@ function EmployeeRow({
             value={role}
             onChange={e => setRole(e.target.value as Role)}
             disabled={isSelf}
-            className="bg-white border border-zinc-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="bg-white border border-zinc-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           >
             <option value="employee">employee</option>
             <option value="admin">admin</option>
@@ -198,7 +198,7 @@ function EmployeeRow({
             <button
               disabled={busy}
               onClick={save}
-              className="text-[10px] font-bold tracking-[0.2em] text-red-800 hover:text-red-900 disabled:opacity-50"
+              className="text-[10px] font-bold tracking-[0.2em] text-brand hover:text-brand-hover disabled:opacity-50"
             >
               SAVE
             </button>
@@ -207,7 +207,7 @@ function EmployeeRow({
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => setEditing(true)}
-              className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-red-800"
+              className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 hover:text-brand"
             >
               EDIT
             </button>
@@ -215,7 +215,7 @@ function EmployeeRow({
               <button
                 onClick={toggleActive}
                 disabled={busy}
-                className="text-zinc-400 hover:text-red-700 disabled:opacity-50"
+                className="text-zinc-400 hover:text-brand disabled:opacity-50"
                 title={employee.is_active ? 'Deactivate' : 'Reactivate'}
               >
                 <Power className="w-3 h-3" />
@@ -296,7 +296,7 @@ function AddEmployeeModal({
             value={name}
             onChange={e => setName(e.target.value)}
             required
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           />
         </label>
 
@@ -310,7 +310,7 @@ function AddEmployeeModal({
             onChange={e => setEmail(e.target.value)}
             required
             placeholder="name@bodymachinefitness.com"
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm placeholder-zinc-400 focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm placeholder-zinc-400 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           />
         </label>
 
@@ -321,14 +321,14 @@ function AddEmployeeModal({
           <select
             value={role}
             onChange={e => setRole(e.target.value as Role)}
-            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700/20"
+            className="w-full bg-white border border-zinc-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20"
           >
             <option value="employee">employee</option>
             <option value="admin">admin</option>
           </select>
         </label>
 
-        {err && <div className="text-xs text-red-700 mb-3">{err}</div>}
+        {err && <div className="text-xs text-brand mb-3">{err}</div>}
 
         <div className="text-[11px] text-zinc-500 mb-4 leading-relaxed">
           The employee can sign in at any time using this email — the system
@@ -339,7 +339,7 @@ function AddEmployeeModal({
         <button
           type="submit"
           disabled={busy}
-          className="w-full bg-red-800 hover:bg-red-900 text-white font-black py-3 rounded-lg tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
+          className="w-full bg-brand hover:bg-brand-hover text-white font-black py-3 rounded-lg tracking-wider disabled:bg-zinc-200 disabled:text-zinc-400"
         >
           {busy ? 'SAVING…' : 'ADD EMPLOYEE'}
         </button>

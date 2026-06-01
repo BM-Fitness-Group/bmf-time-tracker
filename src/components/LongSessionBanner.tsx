@@ -28,14 +28,14 @@ export default function LongSessionBanner({ session }: Props) {
     <div
       className={`mb-4 border rounded-lg p-3 text-xs flex items-start gap-2 ${
         nearCap
-          ? 'border-red-300 bg-red-50 text-red-900'
+          ? 'border-red-300 bg-brand-soft text-brand-hover'
           : 'border-amber-300 bg-amber-50 text-amber-900'
       }`}
       role="alert"
     >
       <AlertCircle
         className={`w-4 h-4 shrink-0 mt-0.5 ${
-          nearCap ? 'text-red-700' : 'text-amber-600'
+          nearCap ? 'text-brand' : 'text-amber-600'
         }`}
       />
       <div>

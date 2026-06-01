@@ -89,16 +89,16 @@ export default function Overview() {
           QUICK ACTIONS
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-          <Link to="/admin/live" className="text-zinc-600 hover:text-red-800">
+          <Link to="/admin/live" className="text-zinc-600 hover:text-brand">
             See who's on the clock now →
           </Link>
-          <Link to="/admin/review" className="text-zinc-600 hover:text-red-800">
+          <Link to="/admin/review" className="text-zinc-600 hover:text-brand">
             Review & approve this week's hours →
           </Link>
-          <Link to="/admin/employees" className="text-zinc-600 hover:text-red-800">
+          <Link to="/admin/employees" className="text-zinc-600 hover:text-brand">
             Add or manage employees →
           </Link>
-          <Link to="/admin/audit" className="text-zinc-600 hover:text-red-800">
+          <Link to="/admin/audit" className="text-zinc-600 hover:text-brand">
             View audit log →
           </Link>
         </div>

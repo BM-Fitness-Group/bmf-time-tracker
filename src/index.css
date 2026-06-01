@@ -1,13 +1,23 @@
 @import "tailwindcss";
 
-/* Light theme with dark-red (BMF brand) accents. */
+/* BMF brand palette — the only three colors per brand context.
+   Generates Tailwind utilities like bg-brand, text-brand,
+   border-brand-hover, etc. */
+@theme {
+  --color-brand: #D70028;
+  --color-brand-hover: #B80022;
+  --color-brand-pressed: #8F001A;
+  --color-brand-soft: #FDECEF;
+  --color-brand-black: #303030;
+}
+
 html,
 body,
 #root {
   min-height: 100vh;
   margin: 0;
   background: #ffffff;
-  color: #18181b; /* zinc-900 */
+  color: #303030;
 }
 
 body {

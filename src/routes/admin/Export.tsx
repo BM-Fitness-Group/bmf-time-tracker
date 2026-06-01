@@ -172,7 +172,7 @@ export default function Export() {
       </div>
 
       {err && (
-        <div className="mb-4 border border-red-300 bg-red-50 rounded-lg p-3 text-xs text-red-800">
+        <div className="mb-4 border border-red-300 bg-brand-soft rounded-lg p-3 text-xs text-brand">
           {err}
         </div>
       )}
@@ -181,13 +181,13 @@ export default function Export() {
         <div className="flex items-center justify-between bg-zinc-50 px-3 py-2 border-b border-zinc-200 text-[10px] font-bold tracking-[0.3em] text-zinc-500">
           <div>EMPLOYEES</div>
           <div className="flex gap-3">
-            <button onClick={selectApproved} className="hover:text-red-800">
+            <button onClick={selectApproved} className="hover:text-brand">
               APPROVED
             </button>
-            <button onClick={selectAll} className="hover:text-red-800">
+            <button onClick={selectAll} className="hover:text-brand">
               ALL
             </button>
-            <button onClick={selectNone} className="hover:text-red-800">
+            <button onClick={selectNone} className="hover:text-brand">
               NONE
             </button>
           </div>
@@ -213,7 +213,7 @@ export default function Export() {
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggle(r.employee.id)}
-                    className="accent-red-800"
+                    className="accent-brand"
                   />
                   <div className="flex-1 font-bold">{r.employee.full_name}</div>
                   <div className="text-xs text-zinc-500 tabular-nums">
@@ -252,7 +252,7 @@ export default function Export() {
       <button
         onClick={generate}
         disabled={selected.size === 0 || generating}
-        className="w-full sm:w-auto bg-red-800 hover:bg-red-900 text-white font-black px-5 py-3 rounded-lg text-xs tracking-widest flex items-center justify-center gap-2 disabled:bg-zinc-200 disabled:text-zinc-400"
+        className="w-full sm:w-auto bg-brand hover:bg-brand-hover text-white font-black px-5 py-3 rounded-lg text-xs tracking-widest flex items-center justify-center gap-2 disabled:bg-zinc-200 disabled:text-zinc-400"
       >
         <Download className="w-4 h-4" />
         {generating ? 'GENERATING…' : `DOWNLOAD XLSX (${selected.size})`}
