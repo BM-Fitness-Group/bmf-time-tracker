@@ -10,6 +10,7 @@ interface AuthState {
   employee: Employee | null
   loading: boolean
   signInWithMagicLink: (email: string) => Promise<{ error: string | null }>
+  signInWithMicrosoft: () => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refreshEmployee: () => Promise<void>
 }
@@ -139,6 +140,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null }
   }
 
+  // Sign in with Microsoft Entra (Azure OAuth) — same Supabase callback,
+  // same downstream AuthCallback flow. The user is bounced to Microsoft,
+  // signs in there (or uses an existing session), and gets redirected
+  // back. Supabase's link_employee_on_signup trigger handles linking the
+  // new auth user to the pre-existing employees row by email.
+  const signInWithMicrosoft = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: 'email openid profile',
+      },
+    })
+    return { error: error?.message ?? null }
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
   }
@@ -154,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     employee,
     loading,
     signInWithMagicLink,
+    signInWithMicrosoft,
     signOut,
     refreshEmployee,
   }
