@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Activity } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { withQueryTimeout } from '@/lib/query'
 import { fmtClock, fmtElapsed } from '@/lib/time'
 import type { ActiveSession, EntityName } from '@/types/db'
 
@@ -20,11 +21,20 @@ export default function Live() {
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('active_sessions')
-      .select('*, employee:employees(id, full_name, email)')
-    if (!error && data) setRows(data as unknown as Row[])
-    setLoading(false)
+    try {
+      const { data, error } = await withQueryTimeout(signal =>
+        supabase
+          .from('active_sessions')
+          .select('*, employee:employees(id, full_name, email)')
+          .abortSignal(signal),
+      )
+      if (!error && data) setRows(data as unknown as Row[])
+    } catch {
+      // Transient failure — keep the current list; the realtime
+      // subscription re-runs load() on the next change.
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {

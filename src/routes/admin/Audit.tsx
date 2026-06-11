@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { withQueryTimeout } from '@/lib/query'
 import { fmtDateTime } from '@/lib/time'
 import type { AuditLog, Employee } from '@/types/db'
 
@@ -25,16 +26,24 @@ export default function Audit() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    let q = supabase
-      .from('audit_log')
-      .select('*, actor:employees(id, full_name)')
-      .order('created_at', { ascending: false })
-      .limit(200)
-    if (filterActor) q = q.eq('actor_id', filterActor)
-    if (filterAction) q = q.eq('action', filterAction)
-    const { data } = await q
-    setRows((data ?? []) as unknown as Row[])
-    setLoading(false)
+    try {
+      const { data } = await withQueryTimeout(signal => {
+        let q = supabase
+          .from('audit_log')
+          .select('*, actor:employees(id, full_name)')
+          .order('created_at', { ascending: false })
+          .limit(200)
+        if (filterActor) q = q.eq('actor_id', filterActor)
+        if (filterAction) q = q.eq('action', filterAction)
+        return q.abortSignal(signal)
+      })
+      setRows((data ?? []) as unknown as Row[])
+    } catch {
+      // Transient failure — keep the current rows rather than blanking the
+      // table; the next filter change or revisit re-runs the query.
+    } finally {
+      setLoading(false)
+    }
   }, [filterActor, filterAction])
 
   useEffect(() => {

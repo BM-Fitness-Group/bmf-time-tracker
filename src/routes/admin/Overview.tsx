@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, Users, CheckSquare, ScrollText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { withQueryTimeout } from '@/lib/query'
 import {
   weekStart,
   weekEnd,
@@ -25,32 +26,41 @@ export default function Overview() {
     const load = async () => {
       const ws = weekStart().toISOString()
       const we = weekEnd().toISOString()
-      const [sess, emps, entries, approvals] = await Promise.all([
-        supabase.from('active_sessions').select('employee_id'),
-        supabase.from('employees').select('id').eq('is_active', true),
-        supabase
-          .from('time_entries')
-          .select('*')
-          .is('deleted_at', null)
-          .gte('clock_in', ws)
-          .lt('clock_in', we),
-        supabase
-          .from('weekly_approvals')
-          .select('employee_id')
-          .eq('week_ending_date', weekEndingDate()),
-      ])
-      const entriesData = (entries.data ?? []) as TimeEntry[]
-      const totals = sumByEntity(entriesData)
-      const weekHours = totals.Corporate + totals.Plano + totals.Dallas
-      const activeEmployees = emps.data?.length ?? 0
-      const approvedEmployees = new Set(approvals.data?.map(a => a.employee_id) ?? [])
-      const pendingWeeks = Math.max(0, activeEmployees - approvedEmployees.size)
-      setStats({
-        activeCount: sess.data?.length ?? 0,
-        employeeCount: activeEmployees,
-        weekHours,
-        pendingWeeks,
-      })
+      try {
+        const [sess, emps, entries, approvals] = await withQueryTimeout(signal =>
+          Promise.all([
+            supabase.from('active_sessions').select('employee_id').abortSignal(signal),
+            supabase.from('employees').select('id').eq('is_active', true).abortSignal(signal),
+            supabase
+              .from('time_entries')
+              .select('*')
+              .is('deleted_at', null)
+              .gte('clock_in', ws)
+              .lt('clock_in', we)
+              .abortSignal(signal),
+            supabase
+              .from('weekly_approvals')
+              .select('employee_id')
+              .eq('week_ending_date', weekEndingDate())
+              .abortSignal(signal),
+          ]),
+        )
+        const entriesData = (entries.data ?? []) as TimeEntry[]
+        const totals = sumByEntity(entriesData)
+        const weekHours = totals.Corporate + totals.Plano + totals.Dallas
+        const activeEmployees = emps.data?.length ?? 0
+        const approvedEmployees = new Set(approvals.data?.map(a => a.employee_id) ?? [])
+        const pendingWeeks = Math.max(0, activeEmployees - approvedEmployees.size)
+        setStats({
+          activeCount: sess.data?.length ?? 0,
+          employeeCount: activeEmployees,
+          weekHours,
+          pendingWeeks,
+        })
+      } catch {
+        // Leave stats null — the cards show "—" rather than freezing on a
+        // hung request. A page revisit re-runs the load.
+      }
     }
     void load()
   }, [])

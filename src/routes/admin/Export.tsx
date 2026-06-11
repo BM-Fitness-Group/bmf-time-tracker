@@ -10,6 +10,7 @@ import {
   weekStart,
 } from '@/lib/time'
 import { buildPayrollWorkbook, payrollFilename } from '@/lib/export'
+import { loadErrorMessage, withQueryTimeout } from '@/lib/query'
 import type { Employee, TimeEntry } from '@/types/db'
 
 type Row = {
@@ -38,54 +39,63 @@ export default function Export() {
   const load = useCallback(async () => {
     setLoading(true)
     setErr(null)
-    const [empRes, entRes, appRes] = await Promise.all([
-      supabase
-        .from('employees')
-        .select('*')
-        .eq('is_active', true)
-        .order('full_name', { ascending: true }),
-      supabase
-        .from('time_entries')
-        .select('*')
-        .is('deleted_at', null)
-        .gte('clock_in', weekStartDate.toISOString())
-        .lt('clock_in', weekEndDate.toISOString()),
-      supabase
-        .from('weekly_approvals')
-        .select('employee_id')
-        .eq('week_ending_date', weekEndIso),
-    ])
-    if (empRes.error || entRes.error || appRes.error) {
-      setErr(
-        empRes.error?.message ??
-          entRes.error?.message ??
-          appRes.error?.message ??
-          null,
+    try {
+      const [empRes, entRes, appRes] = await withQueryTimeout(signal =>
+        Promise.all([
+          supabase
+            .from('employees')
+            .select('*')
+            .eq('is_active', true)
+            .order('full_name', { ascending: true })
+            .abortSignal(signal),
+          supabase
+            .from('time_entries')
+            .select('*')
+            .is('deleted_at', null)
+            .gte('clock_in', weekStartDate.toISOString())
+            .lt('clock_in', weekEndDate.toISOString())
+            .abortSignal(signal),
+          supabase
+            .from('weekly_approvals')
+            .select('employee_id')
+            .eq('week_ending_date', weekEndIso)
+            .abortSignal(signal),
+        ]),
       )
+      if (empRes.error || entRes.error || appRes.error) {
+        setErr(
+          empRes.error?.message ??
+            entRes.error?.message ??
+            appRes.error?.message ??
+            null,
+        )
+        return
+      }
+      const employees = empRes.data ?? []
+      const entries = (entRes.data ?? []) as TimeEntry[]
+      const approvedIds = new Set((appRes.data ?? []).map(a => a.employee_id))
+      const byEmployee = new Map<string, TimeEntry[]>()
+      for (const e of entries) {
+        const list = byEmployee.get(e.employee_id) ?? []
+        list.push(e)
+        byEmployee.set(e.employee_id, list)
+      }
+      // Only list employees who actually clocked time this week — an
+      // employee with zero entries has nothing to export and is just noise.
+      const combined: Row[] = employees
+        .map(emp => ({
+          employee: emp,
+          entries: byEmployee.get(emp.id) ?? [],
+          approved: approvedIds.has(emp.id),
+        }))
+        .filter(r => r.entries.length > 0)
+      setRows(combined)
+      setSelected(new Set(combined.filter(r => r.approved).map(r => r.employee.id)))
+    } catch (e) {
+      setErr(loadErrorMessage(e))
+    } finally {
       setLoading(false)
-      return
     }
-    const employees = empRes.data ?? []
-    const entries = (entRes.data ?? []) as TimeEntry[]
-    const approvedIds = new Set((appRes.data ?? []).map(a => a.employee_id))
-    const byEmployee = new Map<string, TimeEntry[]>()
-    for (const e of entries) {
-      const list = byEmployee.get(e.employee_id) ?? []
-      list.push(e)
-      byEmployee.set(e.employee_id, list)
-    }
-    // Only list employees who actually clocked time this week — an
-    // employee with zero entries has nothing to export and is just noise.
-    const combined: Row[] = employees
-      .map(emp => ({
-        employee: emp,
-        entries: byEmployee.get(emp.id) ?? [],
-        approved: approvedIds.has(emp.id),
-      }))
-      .filter(r => r.entries.length > 0)
-    setRows(combined)
-    setSelected(new Set(combined.filter(r => r.approved).map(r => r.employee.id)))
-    setLoading(false)
   }, [weekStartDate, weekEndDate, weekEndIso])
 
   useEffect(() => {

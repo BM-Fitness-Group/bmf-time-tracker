@@ -13,6 +13,7 @@ import {
   weekStart,
 } from '@/lib/time'
 import { categoryNamesFor } from '@/lib/categories'
+import { loadErrorMessage, withQueryTimeout } from '@/lib/query'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import type { Employee, EntityName, TimeEntry } from '@/types/db'
 
@@ -67,33 +68,43 @@ export default function Review() {
   const loadWeek = useCallback(async () => {
     setLoading(true)
     setErr(null)
-    let entryQuery = supabase
-      .from('time_entries')
-      .select('*')
-      .is('deleted_at', null)
-      .gte('clock_in', weekStartDate.toISOString())
-      .lt('clock_in', weekEndDate.toISOString())
-      .order('clock_in', { ascending: true })
-    let approvalQuery = supabase
-      .from('weekly_approvals')
-      .select('employee_id, approved_at')
-      .eq('week_ending_date', weekEndIso)
-
-    if (selectedId !== ALL) {
-      entryQuery = entryQuery.eq('employee_id', selectedId)
-      approvalQuery = approvalQuery.eq('employee_id', selectedId)
+    try {
+      const [entRes, appRes] = await withQueryTimeout(signal => {
+        let entryQuery = supabase
+          .from('time_entries')
+          .select('*')
+          .is('deleted_at', null)
+          .gte('clock_in', weekStartDate.toISOString())
+          .lt('clock_in', weekEndDate.toISOString())
+          .order('clock_in', { ascending: true })
+        let approvalQuery = supabase
+          .from('weekly_approvals')
+          .select('employee_id, approved_at')
+          .eq('week_ending_date', weekEndIso)
+        if (selectedId !== ALL) {
+          entryQuery = entryQuery.eq('employee_id', selectedId)
+          approvalQuery = approvalQuery.eq('employee_id', selectedId)
+        }
+        return Promise.all([
+          entryQuery.abortSignal(signal),
+          approvalQuery.abortSignal(signal),
+        ])
+      })
+      if (entRes.error) {
+        setErr(entRes.error.message)
+      } else {
+        setEntries(entRes.data ?? [])
+      }
+      const appMap: Record<string, string> = {}
+      for (const row of appRes.data ?? []) {
+        if (row.approved_at) appMap[row.employee_id] = row.approved_at
+      }
+      setApprovals(appMap)
+    } catch (e) {
+      setErr(loadErrorMessage(e))
+    } finally {
+      setLoading(false)
     }
-
-    const [entRes, appRes] = await Promise.all([entryQuery, approvalQuery])
-    if (entRes.error) setErr(entRes.error.message)
-    else setEntries(entRes.data ?? [])
-
-    const appMap: Record<string, string> = {}
-    for (const row of appRes.data ?? []) {
-      if (row.approved_at) appMap[row.employee_id] = row.approved_at
-    }
-    setApprovals(appMap)
-    setLoading(false)
   }, [selectedId, weekStartDate, weekEndDate, weekEndIso])
 
   useEffect(() => {

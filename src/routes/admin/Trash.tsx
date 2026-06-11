@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { RotateCcw, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/auth/AuthContext'
+import { loadErrorMessage, withQueryTimeout } from '@/lib/query'
 import { entryHours, fmtClock, fmtDateTime, fmtHours } from '@/lib/time'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import type { EntityName, TimeEntry } from '@/types/db'
@@ -27,15 +28,23 @@ export default function Trash() {
   const load = useCallback(async () => {
     setLoading(true)
     setErr(null)
-    const { data, error } = await supabase
-      .from('time_entries')
-      .select('*, employee:employees(id, full_name)')
-      .not('deleted_at', 'is', null)
-      .order('deleted_at', { ascending: false })
-      .limit(200)
-    if (error) setErr(error.message)
-    else setRows((data ?? []) as unknown as Row[])
-    setLoading(false)
+    try {
+      const { data, error } = await withQueryTimeout(signal =>
+        supabase
+          .from('time_entries')
+          .select('*, employee:employees(id, full_name)')
+          .not('deleted_at', 'is', null)
+          .order('deleted_at', { ascending: false })
+          .limit(200)
+          .abortSignal(signal),
+      )
+      if (error) setErr(error.message)
+      else setRows((data ?? []) as unknown as Row[])
+    } catch (e) {
+      setErr(loadErrorMessage(e))
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
